@@ -13,8 +13,13 @@ import java.util.regex.Pattern;
 public class LogInfo {
 	
 	public ArrayList<IfInfo> info;
+	public int AssertionPoint;
+	public static Pattern p=Pattern.compile("line(\\d+); ifno\\.(\\d+): if.*;");
+	public static Pattern assertion_p=Pattern.compile("line(\\d+): reached an assertion error");
+	
 	public LogInfo() {
 		info=new ArrayList<>();
+		AssertionPoint=-1;
 	}
 	
 	private static ArrayList<String> readIntoLines(String classfilepath) {
@@ -39,7 +44,7 @@ public class LogInfo {
 	
 	private static Map<String,Integer> findIfNumAndLine(String s) {
 		Map<String,Integer> res=new HashMap<>();
-		Pattern p=Pattern.compile("line(\\d+); ifno\\.(\\d+): if.*;");
+		
 		Matcher m=p.matcher(s);
 		int n=-1;
 		int l=-1;
@@ -50,6 +55,16 @@ public class LogInfo {
 		res.put("line", l);
 		res.put("ifnum", n);
 		return res;
+	}
+	
+	private static int findAssertionPoint(String s) {
+		Matcher m=assertion_p.matcher(s);
+		int point=-1;
+		while (m.find()) {
+			point=Integer.parseInt(m.group(1));
+		}
+		
+		return point;
 	}
 	
 	public void output(String dest) {
@@ -73,7 +88,7 @@ public class LogInfo {
 				if (info.get(i).covered.equals("True")||info.get(i).covered.equals("False")) {
 					fileWriter.write("\t");
 					switch (info.get(i).type) {
-					case "int":
+					
 					case "char":
 					case "short":
 					case "byte":
@@ -82,6 +97,7 @@ public class LogInfo {
 					case "boolean":fileWriter.write(info.get(i).minDist.intValue()+"\t");break;
 					case "double":
 					case "float":fileWriter.write(info.get(i).minDist.doubleValue()+"\t");break;
+					case "int":
 					case "long":fileWriter.write(info.get(i).minDist.longValue()+"\t");break;
 					default:
 						break;
@@ -89,6 +105,9 @@ public class LogInfo {
 					fileWriter.write(info.get(i).left+"\t"+info.get(i).right);
 				}
 				fileWriter.write("\n");
+			}
+			if (AssertionPoint>0) {
+				fileWriter.write(AssertionPoint+"");
 			}
 
 	        fileWriter.close();
@@ -108,28 +127,34 @@ public class LogInfo {
 			String[] strlist;
 			while (s.hasNextLine()) {
 				strlist=s.nextLine().split("\t");
-				int num=Integer.parseInt(strlist[0]);
-				int ln=Integer.parseInt(strlist[1]);
-				String _info=strlist[2];
-				String _type=strlist[3];
-				String _op=strlist[4];
-				
-				IfInfo ifinfo= new IfInfo(num,ln,_info,_type,_op);
-				ifinfo.covered=strlist[5];
-				//Only int considered
-				
-				if (strlist.length>6) {
-					ifinfo.minDist=Integer.parseInt(strlist[6]);
-					ifinfo.left=strlist[7];
-					ifinfo.right=strlist[8];
+				if (strlist.length==1) {
+					int p=Integer.parseInt(strlist[0]);
+					AssertionPoint=p;
 				}
 				else {
-					ifinfo.minDist=0;
-					ifinfo.left="0";
-					ifinfo.right="0";
+					int num=Integer.parseInt(strlist[0]);
+					int ln=Integer.parseInt(strlist[1]);
+					String _info=strlist[2];
+					String _type=strlist[3];
+					String _op=strlist[4];
+					
+					IfInfo ifinfo= new IfInfo(num,ln,_info,_type,_op);
+					ifinfo.covered=strlist[5];
+					//Only int considered
+					
+					if (strlist.length>6) {
+						ifinfo.minDist=Long.parseLong(strlist[6]);
+						ifinfo.left=strlist[7];
+						ifinfo.right=strlist[8];
+					}
+					else {
+						ifinfo.minDist=0;
+						ifinfo.left="0";
+						ifinfo.right="0";
+					}
+					
+					info.add(ifinfo);
 				}
-				
-				info.add(ifinfo);
 
 			}
 			s.close();
@@ -150,6 +175,9 @@ public class LogInfo {
 	public void readFromLog(String src) {
 		ArrayList<String> StrList=readIntoLines(src);
 		for (int i=0;i<StrList.size();i++) {
+			int p=findAssertionPoint(StrList.get(i));
+			if (p>0) AssertionPoint=p;
+			
 			Map<String,Integer> map=findIfNumAndLine(StrList.get(i));
 			int num=map.get("ifnum");
 			int ln=map.get("line");
@@ -178,7 +206,7 @@ public class LogInfo {
 			System.out.println(info.get(i).covered);
 			if (info.get(i).covered.equals("True")||info.get(i).covered.equals("False")) {
 				switch (info.get(i).type) {
-				case "int":
+				
 				case "char":
 				case "short":
 				case "byte":
@@ -187,6 +215,7 @@ public class LogInfo {
 				case "boolean":System.out.println(info.get(i).minDist.intValue());break;
 				case "double":
 				case "float":System.out.println(info.get(i).minDist.doubleValue());break;
+				case "int":
 				case "long":System.out.println(info.get(i).minDist.longValue());break;
 				default:
 					break;
@@ -194,6 +223,9 @@ public class LogInfo {
 				System.out.println(info.get(i).left);
 				System.out.println(info.get(i).right);
 			}
+		}
+		if (AssertionPoint>0) {
+			System.out.println(AssertionPoint);
 		}
 	}
 	

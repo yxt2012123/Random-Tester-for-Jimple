@@ -58,7 +58,10 @@ public class JClassDumpMemInfo {
 	}
 
 	public static boolean isMethodsig(String tmp) {
-		if (tmp.contains("(") && !tmp.contains("<") && !tmp.contains("="))
+		if (tmp.contains("(") && !tmp.contains("<") && !tmp.contains("=") &&
+				!tmp.contains("lookupswitch(") && !tmp.contains("tableswitch("))
+			return true;
+		if (tmp.trim().equals("public void <init>()") || tmp.trim().equals("static void <clinit>()")) 
 			return true;
 		return false;
 	}
@@ -231,7 +234,7 @@ public class JClassDumpMemInfo {
 			if (jimpleStmts.get(i).replaceAll(" ", "").contains(methodsig.replaceAll(" ", "")))
 				break;
 		}
-		//System.out.println(i);
+		//System.out.println(jimpleStmts.get(i).replaceAll(" ", ""));
 		if (jimpleStmts.get(i).trim().endsWith(";"))
 			return result;
 
@@ -245,7 +248,7 @@ public class JClassDumpMemInfo {
 			end++;
 			if (jimpleStmts.get(end).trim().equals("{"))
 				count++;
-			if (jimpleStmts.get(end).trim().equals("}"))
+			if (jimpleStmts.get(end).trim().equals("}") || jimpleStmts.get(end).trim().equals("};"))
 				count--;
 		}
 

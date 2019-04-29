@@ -44,7 +44,7 @@ public class CompareOutputFile {
 			while (m.find()){
 				//System.out.println(m.group(0));
 				fileNameList.add(m.group(0));
-				inputFromOutputFile(path+"\\"+m.group(0));
+				inputFromOutputFile(path+"/"+m.group(0));
 			}
 		}
 	}
@@ -62,7 +62,7 @@ public class CompareOutputFile {
 			while (m.find()){
 				//System.out.println(m.group(0));
 				fileNameList.add(m.group(0));
-				inputFromLog(path+"\\"+m.group(0));
+				inputFromLog(path+"/"+m.group(0));
 			}
 		}
 	}
@@ -75,7 +75,8 @@ public class CompareOutputFile {
 		}
 	}
 	
-	private static ArrayList<Double> calculateWeight_simple (ArrayList<Integer> wholeLine, int targetLine){
+	//TBD
+	private static ArrayList<Double> calculateWeight_simple (ArrayList<Integer> wholeLine, int targetLine, int start, int end){
 		int maxLine=-1;
 		int minLine=2147483647;
 		ArrayList<Double> weight=new ArrayList<>();
@@ -102,7 +103,7 @@ public class CompareOutputFile {
 		return weight;
 	}
 	
-	private static ArrayList<Double> calculateWeight_cover(ArrayList<Integer> wholeIfnum, LogInfo wholeInfo) {
+	private static ArrayList<Double> calculateWeight_cover(ArrayList<Integer> wholeIfnum, ArrayList<Integer> wholeLine, LogInfo wholeInfo, int start, int end) {
 		ArrayList<Double> weight=new ArrayList<>();
 		
 		for (int i=0;i<wholeIfnum.size();i++) {
@@ -117,12 +118,14 @@ public class CompareOutputFile {
 					else break;
 				}
 			}
+			int curLine=wholeLine.get(i);
+			if (curLine<start || curLine>end) curWeight=0;
 			weight.add(curWeight);
 		}
 		return weight;
 	}
 	
-	public static void calculateWholeDist(String method, int targetline, LogInfo whole_info) {
+	public static void calculateWholeDist(String method, int start, int end, int targetline, LogInfo whole_info) {
 		
 		if (infoList.size()!=2) {
 			System.out.println("There are "+infoList.size()+" loginfos in the list, but 2 request.");
@@ -145,8 +148,8 @@ public class CompareOutputFile {
 		}
 
 		switch (method) {
-		case "simple":whole_weight=calculateWeight_simple(whole_line,targetline);break;
-		case "cover":whole_weight=calculateWeight_cover(whole_ifnum,whole_info);break;
+		case "simple":whole_weight=calculateWeight_simple(whole_line,targetline,start,end);break;
+		case "cover":whole_weight=calculateWeight_cover(whole_ifnum,whole_line,whole_info,start,end);break;
 		default:
 			assert(false);
 		}
@@ -229,17 +232,30 @@ public class CompareOutputFile {
 		
 	}
 	
-	public static boolean hitOtherRoute(LogInfo main,LogInfo other) {
+	public static boolean hitOtherRoute(LogInfo main,LogInfo other,int start,int end) {
 		boolean res=false;
+		ArrayList<IfInfo> main_if=new ArrayList<>();
+		ArrayList<IfInfo> other_if=new ArrayList<>();
 		for (int i=0;i<main.info.size();i++) {
-			for (int j=0;j<other.info.size();j++) {
-				if (main.info.get(i).ifnum==other.info.get(j).ifnum) {
-					if (main.info.get(i).covered.equals("Both")) {
+			if (main.info.get(i).line<=end && main.info.get(i).line>=start) {
+				main_if.add(main.info.get(i));
+			}
+		}
+		for (int i=0;i<other.info.size();i++) {
+			if (other.info.get(i).line<=end && other.info.get(i).line>=start) {
+				other_if.add(other.info.get(i));
+			}
+		}
+		
+		for (int i=0;i<main_if.size();i++) {
+			for (int j=0;j<other_if.size();j++) {
+				if (main_if.get(i).ifnum==other_if.get(j).ifnum) {
+					if (main_if.get(i).covered.equals("Both")) 
 						continue;
-					}
+					
 					else {
-						if (!main.info.get(i).covered.equals(other.info.get(i).covered) &&
-								!other.info.get(i).covered.equals("Neither")) {
+						if (!main_if.get(i).covered.equals(other_if.get(j).covered) &&
+								!other_if.get(j).covered.equals("Neither")) {
 							res=true;
 							break;
 						}
@@ -249,14 +265,14 @@ public class CompareOutputFile {
 			if (res) break;
 		}
 		
-		for (int j=0;j<other.info.size();j++) {
+		for (int j=0;j<other_if.size();j++) {
 			boolean contains=false;
-			for (int i=0;i<main.info.size();i++) {
-				if (other.info.get(j).ifnum==main.info.get(i).ifnum) {
+			for (int i=0;i<main_if.size();i++) {
+				if (other_if.get(j).ifnum==main_if.get(i).ifnum) {
 					contains=true;
 				}
 			}
-			if (!contains && !other.info.get(j).covered.equals("Neither")) {
+			if (!contains && !other_if.get(j).covered.equals("Neither")) {
 				res=true;
 				break;
 			}
@@ -264,12 +280,12 @@ public class CompareOutputFile {
 		
 		msg+="Branch test completed, result is "+res+":\n";
 		msg+="main:\n";
-		for (int i=0;i<main.info.size();i++) {
-			msg+="ifnum: "+main.info.get(i).ifnum+": "+main.info.get(i).covered+"\n";
+		for (int i=0;i<main_if.size();i++) {
+			msg+="ifnum: "+main_if.get(i).ifnum+": "+main_if.get(i).covered+"\n";
 		}
 		msg+="other:\n";
-		for (int i=0;i<other.info.size();i++) {
-			msg+="ifnum: "+other.info.get(i).ifnum+": "+other.info.get(i).covered+"\n";
+		for (int i=0;i<other_if.size();i++) {
+			msg+="ifnum: "+other_if.get(i).ifnum+": "+other_if.get(i).covered+"\n";
 		}
 		
 		return res;
@@ -309,6 +325,12 @@ public class CompareOutputFile {
 				}
 			}
 		}
+		
+		for (int i=0;i<infoList.size();i++) {
+			if (infoList.get(i).AssertionPoint>0) {
+				logInfo.AssertionPoint=infoList.get(i).AssertionPoint;
+			}
+		}
 		return logInfo;
 
 	}
@@ -328,69 +350,12 @@ public class CompareOutputFile {
 	         e.printStackTrace();
 	    }
 	}
-	
-	public static void runWholeProcess(String[] args,int targetline,int sleeptime) {
-		String disk_name="F:";
-		String class_path="F:\\mnt\\soot-trunk-withscripts\\test";
-		String class_name="Solution";
-		String folder_name="out";
-		String arg1=" 114 19";
-		String arg2=" 3915 1";
-		
-		if (args.length>0) disk_name=args[0];
-		if (args.length>1) class_path=args[1];
-		if (args.length>2) class_name=args[2];
-		if (args.length>3) folder_name=args[3];
-		if (args.length>4) {
-			arg1="";
-			arg2="";
-			boolean b1=true;
-			for (int i=4;i<args.length;i++) {
-				if (args[i].equals("...")) {
-					b1=false;
-				}
-				else if (b1) {
-					arg1=arg1+" "+args[i];
-				}
-				else {
-					arg2=arg2+" "+args[i];
-				}
-			}
-		}
-		
-		try {
-			Runtime.getRuntime().exec("cmd /c "+disk_name+" && "+
-					"cd "+class_path+" && "+"java "+class_name+arg1);
-			Thread.sleep(sleeptime);
-			OutputFromLogInfo.main_log2out(class_path+"\\_DTJVM.log", class_path+"\\"
-					+ folder_name+"\\out1.txt");
-			Runtime.getRuntime().exec("cmd /c "+disk_name+" && "+
-					"cd "+class_path+" && "+"del _DTJVM.log"+" && "+"java "+class_name+arg2);
-			
-			Thread.sleep(sleeptime);
-			OutputFromLogInfo.main_log2out(class_path+"\\_DTJVM.log", class_path+"\\"
-					+ folder_name+"\\out2.txt");
-			
-			Runtime.getRuntime().exec("cmd /c "+disk_name+" && "+
-					"cd "+class_path+" && "+"del _DTJVM.log");
-			inputFromFolder_OutputFile(class_path+"\\"+folder_name);
-			calculateWholeDist("simple",targetline,new LogInfo());
-		}
-		catch (IOException e){
-			e.printStackTrace();
-		}
-		catch (InterruptedException e) {
-			e.printStackTrace();
-		}
-		System.out.println("Done");
-	}
-	
 
 	public static void main(String[] args) {
 		init();
 		//String path="F:\\mnt\\soot-trunk-withscripts\\test\\out";
 		//String dest="F:\\mnt\\soot-trunk-withscripts\\test\\outcombined.txt";
-		runWholeProcess(args,68,1000);
+		//runWholeProcess(args,68,1000);
 		//inputFromFolder_Log(path);
 		//printInfoList();
 		//combineAndOutput(dest);

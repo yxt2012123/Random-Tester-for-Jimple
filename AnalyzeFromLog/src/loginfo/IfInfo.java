@@ -58,7 +58,7 @@ public class IfInfo {
 		
 		
 		switch (type) {
-		case "int":
+		
 		case "char":
 		case "short":
 		case "byte":
@@ -77,6 +77,7 @@ public class IfInfo {
 		}
 		break;
 		
+		case "int":
 		case "long": dist=p.checkLongBorder(); value=p.checkLongValue();
 
 		if (covered.equals(val2str(value)) && minDist.longValue()>dist.longValue()) {

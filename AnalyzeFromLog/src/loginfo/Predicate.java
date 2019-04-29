@@ -13,7 +13,7 @@ public class Predicate {
 		type=t;
 		op=_op;
 	}
-	public int checkIntBorder()
+	public long checkIntBorder()
 	{
 		/*String[] Int={"int","byte","boolean","char","short"};
 		ArrayList<String> IntType= new ArrayList<>(Arrays.asList(Int));
@@ -30,6 +30,10 @@ public class Predicate {
 		if (type.equals("boolean")) {
 			if (left.equals("true")) intl=1; else intl=0;
 			if (right.equals("true")) intr=1; else intr=0;
+		}
+		else if (type.equals("char")) {
+			intl=left.charAt(0);
+			intr=right.charAt(0);
 		}
 		else {
 			intl=Integer.parseInt(left);
@@ -103,6 +107,10 @@ public class Predicate {
 		if (type.equals("boolean")) {
 			if (left.equals("true")) intl=1; else intl=0;
 			if (right.equals("true")) intr=1; else intr=0;
+		}
+		else if (type.equals("char")) {
+			intl=left.charAt(0);
+			intr=right.charAt(0);
 		}
 		else {
 			intl=Integer.parseInt(left);
