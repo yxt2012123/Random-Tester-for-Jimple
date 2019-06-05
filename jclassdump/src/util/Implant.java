@@ -15,8 +15,8 @@ import java.io.IOException;
 public class Implant{
 	public static void main (String args[])
 	{
-		String src="F:\\mnt\\soot-trunk-withscripts\\test\\Integers.jimple";
-		String dest="F:\\mnt\\soot-trunk-withscripts\\test\\Integers.jimple";
+		String src="F:\\mnt\\soot-trunk-withscripts\\test\\Test.jimple";
+		String dest="F:\\mnt\\soot-trunk-withscripts\\test\\Test.jimple";
 		ArrayList<Integer> target = new ArrayList<>();
 		
 		if (args.length>0)

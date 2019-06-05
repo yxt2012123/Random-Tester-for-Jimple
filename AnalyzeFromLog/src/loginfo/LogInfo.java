@@ -159,7 +159,7 @@ public class LogInfo {
 			}
 			s.close();
 		} catch (FileNotFoundException e) {
-			e.printStackTrace();
+			System.out.println("Warning: File not found, at "+src);
 		}
 	}
 	

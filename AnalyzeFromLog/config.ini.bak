@@ -1,6 +1,6 @@
 disk_name F:
 class_path F:\mnt\soot-trunk-withscripts\test
-class_name RegularMatch
+class_name Integers
 folder_name out
 max_pace 5
 max_iter 30

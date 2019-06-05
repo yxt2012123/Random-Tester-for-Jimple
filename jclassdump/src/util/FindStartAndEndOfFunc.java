@@ -5,8 +5,8 @@ import java.util.ArrayList;
 public class FindStartAndEndOfFunc {
 	
 	public static void main(String[] args) {
-		String func_name="readJavaFormatString";
-		String src="F:\\mnt\\soot-trunk-withscripts\\test\\Tmath.FloatingDecimal.jimple";
+		String func_name="toEnglish";
+		String src="F:\\mnt\\soot-trunk-withscripts\\test\\Integers.jimple";
 		ArrayList<Integer> start=new ArrayList<>();
 		ArrayList<Integer> end=new ArrayList<>();
 		ArrayList<String> func=new ArrayList<>();
